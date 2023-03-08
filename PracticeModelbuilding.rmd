@@ -1,0 +1,121 @@
+---
+output:
+  word_document: default
+  html_document: default
+---
+# Lawrence Nagbe
+
+## BAN 502 LINREG Practice
+
+### March 7, 2023
+
+
+Loading Libraries for use in data analysis
+
+```{r}
+library(tidymodels)
+library(tidyverse)
+library(GGally)
+library(ggcorrplot)
+library(gridExtra) # cleans the plot and makes it readable
+
+```
+Read into the dataset
+
+```{r}
+library(readr)
+Credit <- read_csv("CreditData.csv")
+
+```
+
+View the structucre and summary of the dataset before analysis
+
+```{r}
+str(Credit)
+summary(Credit)
+
+```
+
+Using ggpairs to visualize the dataset and compares correlations of the variables
+
+```{r}
+ggpairs(Credit)
+
+```
+
+Alternative to the the ggpairs visualization is the alpha plot for visualization purposes
+
+```{r}
+p1 = ggplot(Credit, aes(x=AnnualIncome,y=AnnualCharges)) + geom_point(alpha=0.1) #changing alpha is helpful when many points may overlap
+p2 = ggplot(Credit, aes(x=HouseholdSize,y=AnnualCharges)) + geom_point(alpha=0.1)
+p3 = ggplot(Credit, aes(x=YrsEdAfterHS,y=AnnualCharges)) + geom_point(alpha=0.1)
+p4 = ggplot(Credit, aes(x=HrWkTV,y=AnnualCharges)) + geom_point(alpha=0.1)
+grid.arrange(p1,p2,p3,p4,ncol=2)
+
+```
+
+Building a Regression Model with AnnualIncome to Predict AnnualCharges, using non tidymodels approach
+
+
+```{r}
+mod1 = lm(AnnualCharges ~ AnnualIncome, Credit)
+summary(mod1) #examining the model: Is this a good model?
+
+```
+Plot the model 
+
+
+```{r}
+ggplot(Credit, aes(x=AnnualIncome,y=AnnualCharges)) + geom_point(alpha=0.1) + geom_smooth(method = "lm", color = "red") + theme_bw()
+
+```
+
+
+Building similar model but in Tidymodels, let's use recipe
+
+```{r}
+Credit_simple = recipe(AnnualCharges ~ AnnualIncome, Credit)
+Credit_simple
+
+```
+
+Next, we specify the kind of model we are building
+
+```{r}
+lm_model = #gives the model type a name
+  linear_reg() %>% #specifies that we are doing linear regression
+  set_engine("lm") #specifies the specific type of linear tool we want to use
+
+```
+
+
+Next, we will combine the recipe and the model with a workflow 
+
+```{r}
+lm_wflow =
+  workflow() %>%
+  add_model(lm_model) %>%
+  add_recipe(Credit_simple)
+
+```
+
+
+Next, we fit (execute) the workflow on our dataset
+
+
+```{r}
+lm_fit = fit(lm_wflow, Credit)
+
+```
+
+
+Finally, let's see the output of the lm_fit
+
+```{r}
+summary(lm_fit$fit$fit$fit) # three fits, the actual fits is embeded in the object
+
+```
+
+
+
+
